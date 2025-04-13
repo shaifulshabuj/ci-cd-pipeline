@@ -18,21 +18,21 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: 'point-management-app/package-lock.json'  # Updated to use package-lock.json
+          cache-dependency-path: 'ci-cd-pipeline/point-management-app/package-lock.json'  # Fixed path to include ci-cd-pipeline
 
       - name: Install dependencies
         run: |
-          cd point-management-app
+          cd ci-cd-pipeline/point-management-app  # Updated path
           npm install
 
       - name: Run linting
         run: |
-          cd point-management-app
+          cd ci-cd-pipeline/point-management-app  # Updated path
           npm run lint || echo "Linting issues found"
 
       - name: Run tests
         run: |
-          cd point-management-app
+          cd ci-cd-pipeline/point-management-app  # Updated path
           npm test
 
   build-push:
@@ -62,7 +62,7 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          cd point-management-app
+          cd ci-cd-pipeline/point-management-app  # Updated path
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -89,5 +89,6 @@ jobs:
 
       - name: Deploy to AWS
         run: |
+          cd ci-cd-pipeline  # Added path to access deploy.sh
           chmod +x ./deploy.sh
           ./deploy.sh
