@@ -13,27 +13,41 @@ log() {
 
 log "Starting deployment process"
 
-# Check if required environment variables are set, if not load from .env file
-if [ -z "${ECR_REGISTRY}" ] || [ -z "${ECR_REPOSITORY}" ] || [ -z "${IMAGE_TAG}" ] || [ -z "${AWS_ACCOUNT_ID}" ] || [ -z "${AWS_REGION}" ]; then
-  log "Loading environment variables from .env file"
-  if [ -f .env ]; then
-    source .env
-    # Export variables to make them available to child processes
-    export AWS_REGION
-    export AWS_ACCOUNT_ID
-    export ECR_REPOSITORY
-    export IMAGE_TAG
+# Set default values if environment variables are not set
+# This allows the script to work with GitHub Actions secrets
+AWS_REGION=${AWS_REGION:-"ap-northeast-1"}
+ECR_REPOSITORY=${ECR_REPOSITORY:-"point-management-app"}
+IMAGE_TAG=${IMAGE_TAG:-"latest"}
+
+# Try to get AWS Account ID if not explicitly set
+if [ -z "${AWS_ACCOUNT_ID}" ]; then
+  log "AWS_ACCOUNT_ID not set, attempting to retrieve from AWS CLI"
+  # Try to get AWS account ID using AWS CLI
+  AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
+  
+  if [ -z "${AWS_ACCOUNT_ID}" ]; then
+    log "Could not retrieve AWS_ACCOUNT_ID automatically"
     
-    # Construct ECR_REGISTRY from AWS_ACCOUNT_ID and AWS_REGION if not set
-    if [ -z "${ECR_REGISTRY}" ]; then
-      export ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-      log "Setting ECR_REGISTRY to ${ECR_REGISTRY}"
+    # If .env file exists, try to source it
+    if [ -f .env ]; then
+      log "Loading variables from .env file"
+      source .env
+    fi
+    
+    # If still not set, use a placeholder
+    if [ -z "${AWS_ACCOUNT_ID}" ]; then
+      log "WARNING: Setting placeholder AWS_ACCOUNT_ID. This will need to be replaced."
+      AWS_ACCOUNT_ID="123456789012"
     fi
   else
-    log "ERROR: .env file not found and required environment variables are not set."
-    log "Please create a .env file or set the environment variables manually."
-    exit 1
+    log "Retrieved AWS_ACCOUNT_ID: ${AWS_ACCOUNT_ID}"
   fi
+fi
+
+# Construct ECR_REGISTRY if not already set
+if [ -z "${ECR_REGISTRY}" ]; then
+  ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+  log "Setting ECR_REGISTRY to ${ECR_REGISTRY}"
 fi
 
 # Get image information from environment variables
@@ -46,13 +60,6 @@ echo "AWS Region: ${AWS_REGION}"
 # Verify AWS CLI is installed
 if ! command -v aws &> /dev/null; then
   log "ERROR: AWS CLI is required but not installed. Exiting."
-  exit 1
-fi
-
-# Check if required environment variables are set after loading .env
-if [ -z "${AWS_REGION}" ] || [ -z "${ECR_REGISTRY}" ] || [ -z "${ECR_REPOSITORY}" ] || [ -z "${IMAGE_TAG}" ] || [ -z "${AWS_ACCOUNT_ID}" ]; then
-  log "ERROR: Required environment variables are not set."
-  log "Make sure AWS_REGION, ECR_REGISTRY, ECR_REPOSITORY, IMAGE_TAG, and AWS_ACCOUNT_ID are properly set."
   exit 1
 fi
 

@@ -103,7 +103,27 @@ jobs:
           role-duration-seconds: 1200 # Optional: default is 1 hour
           audience: sts.amazonaws.com
 
-      - name: Deploy to AWS
+      - name: Get AWS Account ID
+        id: get-aws-account
         run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID" >> $GITHUB_ENV
+          echo "Retrieved AWS Account ID: $AWS_ACCOUNT_ID"
+
+      - name: Deploy to AWS
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry || format('{0}.dkr.ecr.{1}.amazonaws.com', env.AWS_ACCOUNT_ID, secrets.AWS_REGION || 'ap-northeast-1') }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY || 'point-management-app' }}
+          IMAGE_TAG: ${{ github.sha }}
+          AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'ap-northeast-1' }}
+        run: |
+          echo "Using the following configuration:"
+          echo "ECR Registry: $ECR_REGISTRY"
+          echo "ECR Repository: $ECR_REPOSITORY"
+          echo "Image Tag: $IMAGE_TAG"
+          echo "AWS Region: $AWS_REGION"
+          echo "AWS Account ID: $AWS_ACCOUNT_ID"
+          
           chmod +x ./deploy.sh
           ./deploy.sh
