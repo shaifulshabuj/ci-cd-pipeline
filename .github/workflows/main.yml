@@ -7,7 +7,7 @@ on:
     branches: [ main, master ]
 
 env:
-  ECR_REPOSITORY_NAME: point_management_app
+  ECR_REPOSITORY_NAME: microservice-demo
 
 jobs:
   build-and-test:
