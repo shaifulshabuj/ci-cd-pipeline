@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd point-management-app
-          npm ci
+          npm install  # Changed from npm ci to npm install
 
       - name: Run linting
         run: |
