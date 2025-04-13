@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: 'point-management-app/package.json'  # Updated path specification
+          cache-dependency-path: 'point-management-app/package-lock.json'  # Updated to use package-lock.json
 
       - name: Install dependencies
         run: |
