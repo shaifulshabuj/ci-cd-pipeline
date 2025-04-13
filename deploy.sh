@@ -6,6 +6,9 @@ set -e
 # Parse command-line arguments
 ENVIRONMENT=${1:-dev} # Default to "dev" environment if not specified
 
+# Set default AWS region if not provided
+AWS_REGION=${AWS_REGION:-ap-northeast-1}
+
 # Get image information from environment variables
 IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
 
@@ -27,9 +30,9 @@ if ! command -v aws &> /dev/null; then
 fi
 
 # Check if required environment variables are set
-if [ -z "${AWS_REGION}" ] || [ -z "${ECR_REGISTRY}" ] || [ -z "${ECR_REPOSITORY}" ] || [ -z "${IMAGE_TAG}" ] || [ -z "${AWS_ACCOUNT_ID}" ]; then
+if [ -z "${ECR_REGISTRY}" ] || [ -z "${ECR_REPOSITORY}" ] || [ -z "${IMAGE_TAG}" ] || [ -z "${AWS_ACCOUNT_ID}" ]; then
   log "ERROR: Required environment variables are not set."
-  log "Make sure AWS_REGION, ECR_REGISTRY, ECR_REPOSITORY, IMAGE_TAG, and AWS_ACCOUNT_ID are properly set."
+  log "Make sure ECR_REGISTRY, ECR_REPOSITORY, IMAGE_TAG, and AWS_ACCOUNT_ID are properly set."
   exit 1
 fi
 
