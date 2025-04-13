@@ -45,3 +45,5 @@ build/
 *.tfstate
 *.tfstate.backup
 *.tfvars
+
+project_prompt.md
