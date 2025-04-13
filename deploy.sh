@@ -6,8 +6,35 @@ set -e
 # Parse command-line arguments
 ENVIRONMENT=${1:-dev} # Default to "dev" environment if not specified
 
-# Set default AWS region if not provided
-AWS_REGION=${AWS_REGION:-ap-northeast-1}
+# Function to log messages with timestamps
+log() {
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+}
+
+log "Starting deployment process"
+
+# Check if required environment variables are set, if not load from .env file
+if [ -z "${ECR_REGISTRY}" ] || [ -z "${ECR_REPOSITORY}" ] || [ -z "${IMAGE_TAG}" ] || [ -z "${AWS_ACCOUNT_ID}" ] || [ -z "${AWS_REGION}" ]; then
+  log "Loading environment variables from .env file"
+  if [ -f .env ]; then
+    source .env
+    # Export variables to make them available to child processes
+    export AWS_REGION
+    export AWS_ACCOUNT_ID
+    export ECR_REPOSITORY
+    export IMAGE_TAG
+    
+    # Construct ECR_REGISTRY from AWS_ACCOUNT_ID and AWS_REGION if not set
+    if [ -z "${ECR_REGISTRY}" ]; then
+      export ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+      log "Setting ECR_REGISTRY to ${ECR_REGISTRY}"
+    fi
+  else
+    log "ERROR: .env file not found and required environment variables are not set."
+    log "Please create a .env file or set the environment variables manually."
+    exit 1
+  fi
+fi
 
 # Get image information from environment variables
 IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
@@ -16,23 +43,16 @@ echo "=== Starting deployment to ${ENVIRONMENT} environment ==="
 echo "Image: ${IMAGE}"
 echo "AWS Region: ${AWS_REGION}"
 
-# Function to log messages with timestamps
-log() {
-  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
-}
-
-log "Starting deployment process"
-
 # Verify AWS CLI is installed
 if ! command -v aws &> /dev/null; then
   log "ERROR: AWS CLI is required but not installed. Exiting."
   exit 1
 fi
 
-# Check if required environment variables are set
-if [ -z "${ECR_REGISTRY}" ] || [ -z "${ECR_REPOSITORY}" ] || [ -z "${IMAGE_TAG}" ] || [ -z "${AWS_ACCOUNT_ID}" ]; then
+# Check if required environment variables are set after loading .env
+if [ -z "${AWS_REGION}" ] || [ -z "${ECR_REGISTRY}" ] || [ -z "${ECR_REPOSITORY}" ] || [ -z "${IMAGE_TAG}" ] || [ -z "${AWS_ACCOUNT_ID}" ]; then
   log "ERROR: Required environment variables are not set."
-  log "Make sure ECR_REGISTRY, ECR_REPOSITORY, IMAGE_TAG, and AWS_ACCOUNT_ID are properly set."
+  log "Make sure AWS_REGION, ECR_REGISTRY, ECR_REPOSITORY, IMAGE_TAG, and AWS_ACCOUNT_ID are properly set."
   exit 1
 fi
 
