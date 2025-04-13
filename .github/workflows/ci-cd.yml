@@ -50,7 +50,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION || 'ap-northeast-1' }} # Adding default region
           role-duration-seconds: 1200 # Optional: default is 1 hour (3600 seconds)
-          audience: sts.amazonaws.com
+          audience: sts.ap-northeast-1.amazonaws.com
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -82,10 +82,10 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }} # Adding default region
+          aws-region: ${{ secrets.AWS_REGION || 'ap-northeast-1' }} # Adding default region
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }} # Optional: only if using role assumption
           role-duration-seconds: 1200 # Optional: default is 1 hour
-          audience: sts.amazonaws.com
+          audience: sts.ap-northeast-1.amazonaws.com
 
       - name: Deploy to AWS
         run: |
