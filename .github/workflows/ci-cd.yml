@@ -20,17 +20,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd ci-cd-pipeline/point-management-app
+          cd point-management-app
           npm install
 
       - name: Run linting
         run: |
-          cd ci-cd-pipeline/point-management-app
+          cd point-management-app
           npm run lint || echo "Linting issues found"
 
       - name: Run tests
         run: |
-          cd ci-cd-pipeline/point-management-app
+          cd point-management-app
           npm test
 
   build-push:
