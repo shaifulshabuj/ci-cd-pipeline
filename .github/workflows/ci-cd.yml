@@ -18,12 +18,12 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: '**/package.json'
+          cache-dependency-path: 'point-management-app/package.json'  # Updated path specification
 
       - name: Install dependencies
         run: |
           cd point-management-app
-          npm install  # Changed from npm ci to npm install
+          npm install
 
       - name: Run linting
         run: |
