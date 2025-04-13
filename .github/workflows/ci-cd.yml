@@ -105,6 +105,5 @@ jobs:
 
       - name: Deploy to AWS
         run: |
-          cd ci-cd-pipeline
           chmod +x ./deploy.sh
           ./deploy.sh
